@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clip Pipeline HQ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #0a0a0a;
+    color: #e0e0e0;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #1e1e1e;
+  }
+
+  .header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+
+  .header .subtitle {
+    font-size: 11px;
+    color: #555;
+    margin-top: 3px;
+  }
+
+  .last-updated {
+    font-size: 11px;
+    color: #444;
+    text-align: right;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: #111;
+    border: 1px solid #1e1e1e;
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .card-label {
+    font-size: 10px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .stat-big {
+    font-size: 36px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-sub {
+    font-size: 12px;
+    color: #555;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .pill.ok { background: #0d2b0d; color: #4caf50; border: 1px solid #1a4a1a; }
+  .pill.warn { background: #2b1a00; color: #ff9800; border: 1px solid #4a3000; }
+  .pill.error { background: #2b0a0a; color: #f44336; border: 1px solid #4a1010; }
+  .pill.pending { background: #1a1a2b; color: #7986cb; border: 1px solid #2a2a4a; }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .channels {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .channel-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .channel-name {
+    font-size: 13px;
+    color: #ccc;
+  }
+
+  .section-title {
+    font-size: 11px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    margin-top: 24px;
+  }
+
+  .schedule-table {
+    background: #111;
+    border: 1px solid #1e1e1e;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .schedule-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 80px 80px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #1a1a1a;
+    font-size: 12px;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .schedule-row:last-child { border-bottom: none; }
+
+  .schedule-header {
+    font-size: 10px;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 16px;
+    background: #0d0d0d;
+    border-bottom: 1px solid #1a1a1a;
+    display: grid;
+    grid-template-columns: 100px 1fr 80px 80px;
+    gap: 12px;
+  }
+
+  .date-col { color: #888; }
+  .title-col { color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ch-col { color: #666; font-size: 11px; }
+
+  .quota-bar {
+    width: 100%;
+    height: 4px;
+    background: #1e1e1e;
+    border-radius: 2px;
+    margin-top: 12px;
+    overflow: hidden;
+  }
+
+  .quota-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s;
+  }
+
+  .quota-fill.ok { background: #4caf50; }
+  .quota-fill.warn { background: #ff9800; }
+  .quota-fill.exhausted { background: #333; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #333;
+    font-size: 13px;
+  }
+
+  .refresh-btn {
+    background: none;
+    border: 1px solid #2a2a2a;
+    color: #555;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover { border-color: #444; color: #888; }
+
+  .pipeline-log {
+    font-size: 11px;
+    color: #444;
+    line-height: 1.8;
+    margin-top: 8px;
+  }
+
+  .log-line { display: flex; gap: 12px; }
+  .log-time { color: #333; min-width: 60px; }
+  .log-msg { color: #555; }
+  .log-msg.success { color: #4caf50; }
+  .log-msg.error { color: #f44336; }
+  .log-msg.info { color: #7986cb; }
+
+  .loading { color: #333; font-size: 13px; text-align: center; padding: 60px; }
+
+  a { color: inherit; text-decoration: none; }
+  a:hover { color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Clip Pipeline HQ</h1>
+    <div class="subtitle">Other Games — Automated Content Engine</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="last-updated" id="lastUpdated">Loading...</div>
+    <button class="refresh-btn" onclick="loadStatus()">Refresh</button>
+  </div>
+</div>
+
+<div id="content" class="loading">Loading pipeline status...</div>
+
+<script>
+const STATUS_URL = 'https://raw.githubusercontent.com/honeybee1130/og-clip-hq/main/status.json?cb=' + Date.now();
+
+function timeAgo(isoStr) {
+  const d = new Date(isoStr);
+  const diff = Math.floor((Date.now() - d) / 1000);
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
+function formatDate(isoStr) {
+  const d = new Date(isoStr);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + 
+         ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function formatReset(isoStr) {
+  const d = new Date(isoStr);
+  const diff = Math.floor((d - Date.now()) / 1000);
+  if (diff <= 0) return 'now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm';
+  return Math.floor(diff/3600) + 'h ' + Math.floor((diff%3600)/60) + 'm';
+}
+
+function statusPill(status) {
+  const map = {
+    ok: ['ok', '● OK'],
+    needs_auth: ['error', '✕ Needs Auth'],
+    exhausted: ['warn', '⚡ Exhausted'],
+    pending: ['pending', '⏳ Pending'],
+    error: ['error', '✕ Error'],
+    running: ['ok', '▶ Running']
+  };
+  const [cls, label] = map[status] || ['warn', status];
+  return `<span class="pill ${cls}"><span class="dot"></span>${label}</span>`;
+}
+
+function render(s) {
+  const p = s.pipeline;
+  const yt = s.youtube;
+  const pending = s.pending;
+  const total = s.allTimeUploads;
+
+  let quotaPercent = 0;
+  let quotaClass = 'exhausted';
+  if (yt.quotaStatus === 'ok') { quotaPercent = 85; quotaClass = 'ok'; }
+  else if (yt.quotaStatus === 'warn') { quotaPercent = 40; quotaClass = 'warn'; }
+  
+  const resetIn = yt.quotaResetsAt ? formatReset(yt.quotaResetsAt) : '?';
+
+  let scheduleHTML = '';
+  if (s.scheduled && s.scheduled.length > 0) {
+    const rows = s.scheduled.slice(0, 20).map(item => `
+      <div class="schedule-row">
+        <div class="date-col">${formatDate(item.scheduledAt)}</div>
+        <div class="title-col" title="${item.title}">${item.title}</div>
+        <div class="ch-col">${item.channel}</div>
+        <div>${item.videoId ? '<a href="https://youtu.be/'+item.videoId+'" target="_blank">▶ View</a>' : '—'}</div>
+      </div>
+    `).join('');
+    scheduleHTML = `
+      <div class="section-title">Scheduled Uploads</div>
+      <div class="schedule-table">
+        <div class="schedule-header">
+          <div>Date</div><div>Title</div><div>Channel</div><div></div>
+        </div>
+        ${rows}
+      </div>`;
+  } else {
+    scheduleHTML = `
+      <div class="section-title">Scheduled Uploads</div>
+      <div class="schedule-table">
+        <div class="empty-state">No scheduled uploads</div>
+      </div>`;
+  }
+
+  document.getElementById('content').innerHTML = `
+    <div class="grid">
+
+      <div class="card">
+        <div class="card-label">Pipeline</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          ${statusPill(p.status)}
+          <span style="font-size:11px;color:#444">${timeAgo(p.lastRun)}</span>
+        </div>
+        <div class="pipeline-log">
+          <div class="log-line">
+            <span class="log-time">Last run</span>
+            <span class="log-msg">${formatDate(p.lastRun)}</span>
+          </div>
+          <div class="log-line">
+            <span class="log-time">Found</span>
+            <span class="log-msg info">${p.clipsFound} clips above threshold</span>
+          </div>
+          <div class="log-line">
+            <span class="log-time">Uploaded</span>
+            <span class="log-msg success">${p.clipsUploaded} clips</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">YouTube Quota</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          ${statusPill(yt.quotaStatus)}
+          ${yt.quotaStatus === 'exhausted' ? `<span style="font-size:11px;color:#444">resets in ${resetIn}</span>` : ''}
+        </div>
+        <div class="quota-bar">
+          <div class="quota-fill ${quotaClass}" style="width:${quotaPercent}%"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Channels</div>
+        <div class="channels">
+          <div class="channel-row">
+            <span class="channel-name">@OtherGamesXYZ</span>
+            ${statusPill(yt.og.status)}
+          </div>
+          <div class="channel-row">
+            <span class="channel-name">@honeybdot</span>
+            ${statusPill(yt.honey.status)}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Pending</div>
+        <div class="stat-big" style="color:${pending.trimmedClips > 0 ? '#ff9800' : '#4caf50'}">${pending.trimmedClips}</div>
+        <div class="stat-sub">clips waiting to upload</div>
+        ${pending.waitingFor ? `<div style="margin-top:8px">${statusPill('pending')} <span style="font-size:11px;color:#444;margin-left:6px">${pending.waitingFor.replace(/_/g,' ')}</span></div>` : ''}
+      </div>
+
+      <div class="card">
+        <div class="card-label">All Time — @OtherGamesXYZ</div>
+        <div class="stat-big">${total.og}</div>
+        <div class="stat-sub">videos uploaded</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">All Time — @honeybdot</div>
+        <div class="stat-big">${total.honey}</div>
+        <div class="stat-sub">videos uploaded</div>
+      </div>
+
+    </div>
+
+    ${scheduleHTML}
+  `;
+}
+
+async function loadStatus() {
+  try {
+    const url = 'https://raw.githubusercontent.com/honeybee1130/og-clip-hq/main/status.json?cb=' + Date.now();
+    const r = await fetch(url);
+    const s = await r.json();
+    document.getElementById('lastUpdated').textContent = 'Updated ' + timeAgo(s.lastUpdated);
+    render(s);
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<div class="empty-state">Failed to load status. Check GitHub repo.</div>`;
+  }
+}
+
+loadStatus();
+setInterval(loadStatus, 60000);
+</script>
+</body>
+</html>

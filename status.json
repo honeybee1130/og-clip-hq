@@ -1,0 +1,24 @@
+{
+  "lastUpdated": "2026-03-10T22:31:00Z",
+  "pipeline": {
+    "lastRun": "2026-03-10T10:09:04Z",
+    "clipsFound": 3,
+    "clipsUploaded": 3,
+    "status": "ok"
+  },
+  "youtube": {
+    "quotaStatus": "exhausted",
+    "quotaResetsAt": "2026-03-11T08:00:00Z",
+    "og": { "status": "needs_auth", "channel": "@OtherGamesXYZ" },
+    "honey": { "status": "ok", "channel": "@honeybdot" }
+  },
+  "scheduled": [],
+  "pending": {
+    "trimmedClips": 46,
+    "waitingFor": "quota_reset"
+  },
+  "allTimeUploads": {
+    "og": 31,
+    "honey": 31
+  }
+}

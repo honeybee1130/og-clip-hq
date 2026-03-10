@@ -1,7 +1,7 @@
 {
-  "lastUpdated": "2026-03-10T22:31:00Z",
+  "lastUpdated": "2026-03-10T22:53:35Z",
   "pipeline": {
-    "lastRun": "2026-03-10T10:09:04Z",
+    "lastRun": "2026-03-10T10:09:04.815923",
     "clipsFound": 3,
     "clipsUploaded": 3,
     "status": "ok"
@@ -9,8 +9,14 @@
   "youtube": {
     "quotaStatus": "exhausted",
     "quotaResetsAt": "2026-03-11T08:00:00Z",
-    "og": { "status": "needs_auth", "channel": "@OtherGamesXYZ" },
-    "honey": { "status": "ok", "channel": "@honeybdot" }
+    "og": {
+      "status": "needs_auth",
+      "channel": "@OtherGamesXYZ"
+    },
+    "honey": {
+      "status": "ok",
+      "channel": "@honeybdot"
+    }
   },
   "scheduled": [],
   "pending": {
